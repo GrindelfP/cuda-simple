@@ -141,7 +141,7 @@ printMatrix(float* matrix, int n) {
 int 
 main() {
     int 
-        sizes[] = {3, 512, 102, 2048 }; // sizes of matrices to be tested 
+        sizes[] = {3, 512, 1024, 2048 }; // sizes of matrices to be tested 
         // (3x3 is for demonstration of calculus correctness)
 
     for (int i = 0; i < 4; ++i) {
@@ -149,12 +149,12 @@ main() {
         // INITIALIZATION
         int 
             N = sizes[i];
-        float* 
-            A = new float[N * N], 
-            B = new float[N * N],
-            C_CPU = new float[N * N],
-            C_GPU = new float[N * N],
-            C_Trans = new float[N * N];
+        float 
+           * A = new float[N * N], 
+           * B = new float[N * N],
+           * C_CPU = new float[N * N],
+           * C_GPU = new float[N * N],
+           * C_Trans = new float[N * N];
 
         for (int i = 0; i < N * N; ++i) {
             A[i] = static_cast<float>(rand()) / RAND_MAX;
