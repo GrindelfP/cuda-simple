@@ -1,0 +1,11 @@
+._.git
+._.gitignore
+._LICENSE
+._README.adoc
+._matrices-multiplication.cu
+.vs/
+Matrices.C760D216/
+MatricesMultiplication_G.sln
+MatricesMultiplication_G.vcxproj
+MatricesMultiplication_G.vcxproj.user
+x64/

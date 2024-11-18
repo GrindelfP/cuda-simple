@@ -16,7 +16,7 @@
 
 
 /**
-* Multiplies two matrices A and B and stores result in matrix C.
+* Multiplies two matrices A and B on CPU and stores result in matrix C.
 * 
 * @param A matrix A
 * @param B matrix B
@@ -40,7 +40,15 @@ multiplyMatricesCPU(
     }
 }
 
-
+/**
+* Kernel-function which multiplies two matrices A and B on GPU and stores 
+* result in matrix C.
+* 
+* @param A matrix A
+* @param B matrix B
+* @param C resulting matrix C
+* @param n size of square matrices
+*/
 __global__ 
 void 
 multiplyMatricesGPU(
@@ -61,7 +69,13 @@ multiplyMatricesGPU(
     }
 }
 
-
+/**
+* Transposes provided matrix B and stores result in matrix B_T.
+*
+* @param B matrix B
+* @param B_T resulting matrix B_T
+* @param n size of square matrices
+*/
 void 
 transposeMatrix(
     float* B, 
@@ -75,7 +89,18 @@ transposeMatrix(
     }
 }
 
-
+/**
+* Multiplies two matrices A and B transposed on CPU and stores result in matrix C.
+* The function implements optimisation approach for matrix multiplication, which
+* concludes in transposing matrix B and then multiplying it with matrix A, so
+* it is possible to access elements of matrix B in a row-major order, which is
+* less memory intensive.
+* 
+* @param A matrix A
+* @param B_T matrix B
+* @param C resulting matrix C
+* @param n size of square matrices
+*/
 void 
 multiplyMatricesWithTransposeCPU(
     float* A, 
@@ -93,6 +118,12 @@ multiplyMatricesWithTransposeCPU(
     }
 }
 
+/**
+* Prints provided matrix.
+*
+* @param matrix matrix to be printed
+* @param n size of square matrix
+*/
 void 
 printMatrix(float* matrix, int n) {
     for (int i = 0; i < n; ++i) {
@@ -104,18 +135,26 @@ printMatrix(float* matrix, int n) {
     std::cout << "\n";
 }
 
+/**
+* Main function which tests matrix multiplication on CPU and GPU.
+*/
 int 
 main() {
-    int sizes[] = {3, 512, 102, 2048 };
+    int 
+        sizes[] = {3, 512, 102, 2048 }; // sizes of matrices to be tested 
+        // (3x3 is for demonstration of calculus correctness)
 
     for (int i = 0; i < 4; ++i) {
-        int N = sizes[i];
 
-        float* A = new float[N * N];
-        float* B = new float[N * N];
-        float* C_CPU = new float[N * N];
-        float* C_GPU = new float[N * N];
-        float* C_Trans = new float[N * N];
+        // INITIALIZATION
+        int 
+            N = sizes[i];
+        float* 
+            A = new float[N * N], 
+            B = new float[N * N],
+            C_CPU = new float[N * N],
+            C_GPU = new float[N * N],
+            C_Trans = new float[N * N];
 
         for (int i = 0; i < N * N; ++i) {
             A[i] = static_cast<float>(rand()) / RAND_MAX;
@@ -127,7 +166,7 @@ main() {
             printMatrix(B, N);
         }
 
-        // CPU Time Measurement
+        // CPU TEST
         auto startCPU = std::chrono::high_resolution_clock::now();
         multiplyMatricesCPU(A, B, C_CPU, N);
         auto endCPU = std::chrono::high_resolution_clock::now();
@@ -138,6 +177,7 @@ main() {
             printMatrix(C_CPU, N);
         }
 
+        // GPU TEST
         float* d_A, * d_B, * d_C;
         CHECK_CUDA_CALL(cudaMalloc(&d_A, N * N * sizeof(float)));
         CHECK_CUDA_CALL(cudaMalloc(&d_B, N * N * sizeof(float)));
@@ -149,7 +189,6 @@ main() {
         dim3 blocksPerGrid((N + threadsPerBlock.x - 1) / threadsPerBlock.x,
             (N + threadsPerBlock.y - 1) / threadsPerBlock.y);
 
-        // GPU Time Measurement with CUDA Events
         cudaEvent_t startGPU, endGPU;
         CHECK_CUDA_CALL(cudaEventCreate(&startGPU));
         CHECK_CUDA_CALL(cudaEventCreate(&endGPU));
@@ -172,6 +211,7 @@ main() {
             printMatrix(C_GPU, N);
         }
 
+        // CPU TEST WITH TRANSPOSE
         float* B_T = new float[N * N];
         transposeMatrix(B, B_T, N);
         auto startTrans = std::chrono::high_resolution_clock::now();
@@ -184,6 +224,8 @@ main() {
             printMatrix(C_Trans, N);
         }
 
+
+        // RESULTS PRINT
         std::cout << "Matrix size: " << N << "x" << N << "\n";
         std::cout << "Time (CPU): " << timeCPU << " ms\n";
         std::cout << "Time (GPU): " << timeGPU << " ms\n";
@@ -193,6 +235,8 @@ main() {
         std::cout << "Speedup (CPU vs GPU): " << slowest / timeGPU << "x\n";
         std::cout << "Speedup (CPU vs Transpose): " << slowest / timeTrans << "x\n\n";
 
+
+        // CLEANUP
         delete[] A;
         delete[] B;
         delete[] C_CPU;
@@ -206,5 +250,6 @@ main() {
         CHECK_CUDA_CALL(cudaEventDestroy(startGPU));
         CHECK_CUDA_CALL(cudaEventDestroy(endGPU));
     }
+
     return 0;
 }
