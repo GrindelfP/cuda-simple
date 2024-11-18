@@ -1,0 +1,34 @@
+= Matrices multiplication test =
+
+== Description ==
+
+This program is dedicated to compare execution time of multiplication 
+of a two square matrices on CPU, on GPU and on CPU with optimisation such as 
+matrix B (for which A * B = C is performed) is transposed so multiplication 
+is done row by row (not row by column) which speeds up execution on CPU.
+
+The matrices A, B and C are squared matrices containing random floating point 
+numbers. 
+
+The programm prints result for each operation and two acceleration coefitients
+into a console.
+
+The program is completed via Visual Studio on Windows, but here is presented 
+only the sorce code file matrices-multiplication.cu, while executable file
+is stored in Release section of the repository.
+
+The program prints two small 3x3 matrix and results from 3 different 
+calculations to shou that calculus is correct. 
+
+== Program structure ==
+
+Program source code is stored in a source code file matrices-multiplication.cu,
+which contain function
+
+* main - for execution of the program,
+* multiplyMatricesCPU - for multiplication of matrices on CPU,
+* multiplyMatricesGPU - for multiplication of matrices on GPU,
+* transposeMatrix - for generating a transposed matrix,
+* multiplyMatricesWithTransposeCPu - for multiplication of first and second
+transposed matrix,
+* printMatrix - for printing the matrix in console.
