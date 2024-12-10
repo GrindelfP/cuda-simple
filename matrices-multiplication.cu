@@ -32,10 +32,11 @@ multiplyMatricesCPU(
 ) {
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j) {
-            C[i * n + j] = 0;
+            float sum = 0.f;
             for (int k = 0; k < n; ++k) {
-                C[i * n + j] += A[i * n + k] * B[k * n + j];
+                sum += A[i * n + k] * B[k * n + j];
             }
+            C[i * n + j] = sum;
         }
     }
 }
@@ -110,10 +111,11 @@ multiplyMatricesWithTransposeCPU(
 ) {
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j) {
-            C[i * n + j] = 0;
+            float sum = 0.f;
             for (int k = 0; k < n; ++k) {
-                C[i * n + j] += A[i * n + k] * B_T[j * n + k];
+                sum += A[i * n + k] * B_T[j * n + k];
             }
+            C[i * n + j] = sum;
         }
     }
 }
@@ -140,23 +142,23 @@ printMatrix(float* matrix, int n) {
 */
 int 
 main() {
-    int 
-        sizes[] = {3, 512, 1024, 2048 }; // sizes of matrices to be tested 
+    int sizes[] = {3, 512, 1024, 2048 }; // sizes of matrices to be tested 
         // (3x3 is for demonstration of calculus correctness)
 
     for (int i = 0; i < 4; ++i) {
 
         // INITIALIZATION
         int 
-            N = sizes[i];
+            N = sizes[i],
+            NN = N * N;
         float 
-           * A = new float[N * N], 
-           * B = new float[N * N],
-           * C_CPU = new float[N * N],
-           * C_GPU = new float[N * N],
-           * C_Trans = new float[N * N];
+           * A = new float[NN], 
+           * B = new float[NN],
+           * C_CPU = new float[NN],
+           * C_GPU = new float[NN],
+           * C_Trans = new float[NN];
 
-        for (int i = 0; i < N * N; ++i) {
+        for (int i = 0; i < NN; ++i) {
             A[i] = static_cast<float>(rand()) / RAND_MAX;
             B[i] = static_cast<float>(rand()) / RAND_MAX;
         }
@@ -178,12 +180,16 @@ main() {
         }
 
         // GPU TEST
-        float* d_A, * d_B, * d_C;
-        CHECK_CUDA_CALL(cudaMalloc(&d_A, N * N * sizeof(float)));
-        CHECK_CUDA_CALL(cudaMalloc(&d_B, N * N * sizeof(float)));
-        CHECK_CUDA_CALL(cudaMalloc(&d_C, N * N * sizeof(float)));
-        CHECK_CUDA_CALL(cudaMemcpy(d_A, A, N * N * sizeof(float), cudaMemcpyHostToDevice));
-        CHECK_CUDA_CALL(cudaMemcpy(d_B, B, N * N * sizeof(float), cudaMemcpyHostToDevice));
+        float
+            * d_A, 
+            * d_B, 
+            * d_C;
+        size_t matrixSize = NN * sizeof(float);
+        CHECK_CUDA_CALL(cudaMalloc((void**)&d_A, matrixSize));
+        CHECK_CUDA_CALL(cudaMalloc((void**)&d_B, matrixSize));
+        CHECK_CUDA_CALL(cudaMalloc((void**)&d_C, matrixSize));
+        CHECK_CUDA_CALL(cudaMemcpy(d_A, A, matrixSize, cudaMemcpyHostToDevice));
+        CHECK_CUDA_CALL(cudaMemcpy(d_B, B, matrixSize, cudaMemcpyHostToDevice));
 
         dim3 threadsPerBlock(16, 16);
         dim3 blocksPerGrid((N + threadsPerBlock.x - 1) / threadsPerBlock.x,
@@ -204,7 +210,7 @@ main() {
         CHECK_CUDA_CALL(cudaEventElapsedTime(&elapsedGPU, startGPU, endGPU));
         double timeGPU = elapsedGPU;
 
-        CHECK_CUDA_CALL(cudaMemcpy(C_GPU, d_C, N * N * sizeof(float), cudaMemcpyDeviceToHost));
+        CHECK_CUDA_CALL(cudaMemcpy(C_GPU, d_C, matrixSize, cudaMemcpyDeviceToHost));
 
         if (N == 3) {
             std::cout << "Calculated on GPU:\n";
